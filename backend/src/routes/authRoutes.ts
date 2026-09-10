@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { AuthService, AppError } from '../services/AuthService';
+import { AuthService } from '../services/AuthService';
+import { AppError } from '../services/AppError';
 import { authLimiter } from '../middleware/rateLimiter';
 
 export function createAuthRoutes(authService: AuthService): Router {

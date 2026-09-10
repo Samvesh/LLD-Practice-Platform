@@ -5,7 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import { connectDatabase } from './config/db';
 import { env } from './config/env';
-import { DEFAULT_LLD_RUBRIC } from './config/rubric';
+import { DEFAULT_LLD_RUBRIC } from './domain/rubric/Rubric';
 
 // Middleware
 import { generalLimiter } from './middleware/rateLimiter';

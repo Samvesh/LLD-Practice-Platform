@@ -1,7 +1,7 @@
 // Global error handler middleware
 
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../services/AuthService';
+import { AppError } from '../services/AppError';
 
 export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {
   console.error(`[ERROR] ${err.name}: ${err.message}`);

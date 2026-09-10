@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { SubmissionService } from '../services/SubmissionService';
 import { authMiddleware } from '../middleware/auth';
 import { submissionLimiter } from '../middleware/rateLimiter';
-import { AppError } from '../services/AuthService';
+import { AppError } from '../services/AppError';
 
 export function createSubmissionRoutes(submissionService: SubmissionService): Router {
   const router = Router();

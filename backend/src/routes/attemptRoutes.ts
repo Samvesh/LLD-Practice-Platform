@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { AttemptService } from '../services/AttemptService';
 import { SubmissionService } from '../services/SubmissionService';
 import { authMiddleware } from '../middleware/auth';
-import { AppError } from '../services/AuthService';
+import { AppError } from '../services/AppError';
 
 export function createAttemptRoutes(
   attemptService: AttemptService,

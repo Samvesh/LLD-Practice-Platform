@@ -71,6 +71,3 @@ export class AuthService {
     return jwt.sign(payload, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN } as any);
   }
 }
-
-// Re-export AppError for backward compatibility
-export { AppError } from './AppError';

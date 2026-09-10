@@ -16,13 +16,4 @@ export class ProblemService {
       throw new Error('Problem not found');
     }
     return problem;
-  }
-
-  async getProblemBySlug(slug: string): Promise<Problem> {
-    const problem = await this.problemRepo.findBySlug(slug);
-    if (!problem) {
-      throw new Error('Problem not found');
-    }
-    return problem;
-  }
 }
