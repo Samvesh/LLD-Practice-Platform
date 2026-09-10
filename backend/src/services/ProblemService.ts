@@ -16,4 +16,5 @@ export class ProblemService {
       throw new Error('Problem not found');
     }
     return problem;
+  }
 }
