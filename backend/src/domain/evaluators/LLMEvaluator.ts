@@ -125,7 +125,7 @@ You MUST evaluate ALL ${rubric.dimensions.length} dimensions. Do not skip any.`;
     const { ChatGoogleGenerativeAI } = await import('@langchain/google-genai');
 
     const model = new ChatGoogleGenerativeAI({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash',
       apiKey: this.apiKey,
       temperature: 0.1, // Low temperature for consistent, rubric-adherent scoring
       maxOutputTokens: 4096,
