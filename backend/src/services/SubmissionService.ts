@@ -72,7 +72,7 @@ export class SubmissionService {
     });
 
     // Step 5: Fire evaluation async — does NOT block the response
-    this.fireAsyncEvaluation(submission, attempt.problemId);
+    this.fireAsyncEvaluation({ ...submission, state: SubmissionState.Evaluating }, attempt.problemId);
 
     // Step 6: Return submission with Evaluating state
     return {
