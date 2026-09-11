@@ -1,11 +1,15 @@
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Logo from '../components/Logo';
+import { User, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -26,52 +30,131 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="card auth-card">
-        <h1 className="auth-title">Create Account</h1>
-        {error && <div className="alert alert-error">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="name">Name</label>
-            <input
-              id="name"
-              type="text"
-              className="form-input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              autoFocus
-            />
+    <div className="min-h-screen bg-[#FAF6F0] flex items-center justify-center p-4 sm:p-6 select-none">
+      <div className="w-full max-w-[460px] bg-white rounded-2xl shadow-[0_8px_30px_-4px_rgba(30,41,59,0.06),0_2px_8px_-1px_rgba(30,41,59,0.03)] border border-[#F1EBE4] p-8 sm:p-10">
+        {/* Centered Logo */}
+        <div className="flex justify-center">
+          <Logo showTagline={true} size="md" />
+        </div>
+
+        {/* Heading and Subtext */}
+        <div className="text-center mt-7">
+          <h1 className="text-2xl sm:text-[28px] font-bold text-navy tracking-tight leading-tight">
+            Create Account
+          </h1>
+          <p className="text-slate-subtext text-sm mt-1.5">
+            Start your system design journey
+          </p>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mt-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+            {error}
           </div>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              className="form-input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+          {/* Name Field */}
+          <div>
+            <label htmlFor="name" className="block text-xs sm:text-sm font-semibold text-navy mb-1.5">
+              Full Name
+            </label>
+            <div className="relative flex items-center">
+              <div className="absolute left-3.5 text-slate-muted pointer-events-none flex items-center">
+                <User size={17} strokeWidth={2} />
+              </div>
+              <input
+                id="name"
+                type="text"
+                className="w-full pl-10 pr-4 py-2.5 bg-cream-50/60 border border-[#E2E8F0] rounded-xl text-navy text-sm placeholder:text-slate-muted focus:bg-white focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-all outline-none"
+                placeholder="Alex Developer"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                autoFocus
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              className="form-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
+
+          {/* Email Field */}
+          <div>
+            <label htmlFor="email" className="block text-xs sm:text-sm font-semibold text-navy mb-1.5">
+              Email
+            </label>
+            <div className="relative flex items-center">
+              <div className="absolute left-3.5 text-slate-muted pointer-events-none flex items-center">
+                <Mail size={17} strokeWidth={2} />
+              </div>
+              <input
+                id="email"
+                type="email"
+                className="w-full pl-10 pr-4 py-2.5 bg-cream-50/60 border border-[#E2E8F0] rounded-xl text-navy text-sm placeholder:text-slate-muted focus:bg-white focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-all outline-none"
+                placeholder="you@exemple.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? 'Creating account...' : 'Create Account'}
-          </button>
+
+          {/* Password Field */}
+          <div>
+            <label htmlFor="password" className="block text-xs sm:text-sm font-semibold text-navy mb-1.5">
+              Password
+            </label>
+            <div className="relative flex items-center">
+              <div className="absolute left-3.5 text-slate-muted pointer-events-none flex items-center">
+                <Lock size={17} strokeWidth={2} />
+              </div>
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                className="w-full pl-10 pr-11 py-2.5 bg-cream-50/60 border border-[#E2E8F0] rounded-xl text-navy text-sm placeholder:text-slate-muted focus:bg-white focus:border-terracotta focus:ring-1 focus:ring-terracotta transition-all outline-none"
+                placeholder="Choose a password (min 6 chars)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3.5 text-slate-muted hover:text-slate-subtext transition-colors p-1"
+                title={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-terracotta hover:bg-terracotta-600 active:bg-terracotta-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span>{loading ? 'Creating account...' : 'Create Account'}</span>
+              <ArrowRight size={16} strokeWidth={2.4} />
+            </button>
+          </div>
         </form>
-        <div className="auth-footer">
-          Already have an account? <Link to="/login">Sign in</Link>
+
+        {/* Divider */}
+        <div className="my-6 border-t border-[#F1EAE0]" />
+
+        {/* Footer */}
+        <div className="text-center text-sm text-slate-subtext">
+          Already have an account?{' '}
+          <Link
+            to="/login"
+            className="text-terracotta font-semibold underline underline-offset-2 hover:text-terracotta-600 transition-colors"
+          >
+            Sign in
+          </Link>
         </div>
       </div>
     </div>
