@@ -1,153 +1,116 @@
 # LLD Practice Platform
 
-A full-stack prototype for practicing Low-Level Design with structured AI feedback.
-
-**Choose problem → Write design → Submit → Get structured feedback → Track improvement → Retry**
+A full-stack web app for practicing Low-Level Design problems with automated, structured feedback. Instead of just reading solutions passively, you pick a problem (like a Parking Lot or Rate Limiter), write out your class decomposition and design rationale in plain text, submit it, and get evaluated against a multi-criteria rubric with scores, identified concerns, and suggestions for improvement.
 
 ## Tech Stack
 
-- **Backend**: Node.js + Express + TypeScript
-- **Database**: MongoDB (Atlas) with Mongoose
-- **Frontend**: React + TypeScript + Vite
-- **AI Evaluation**: LangChain + Google Gemini (structured output)
-- **Auth**: JWT + bcrypt
+The backend is built with Node.js, Express, and TypeScript, backed by MongoDB (Atlas) via Mongoose. The frontend is a React SPA set up with Vite, Tailwind CSS, and React Router. For evaluating submissions, the backend uses LangChain with Google Gemini (via `@langchain/google-genai`), asking the model for structured JSON output that gets validated before saving.
 
-## Prerequisites
+## Getting It Running Locally
 
-- Node.js ≥ 18
-- A MongoDB Atlas connection string (or local MongoDB)
-- A Google Gemini API key
+You will need Node.js (v18 or higher), a running MongoDB instance (or a free MongoDB Atlas cluster URI), and a Google Gemini API key.
 
-## Quick Start
+### 1. Clone and install dependencies
 
-### 1. Clone & Install
+Clone the repository and install packages for both parts of the app:
 
 ```bash
-# Backend
+git clone https://github.com/Samvesh/LLD-Practice-Platform.git
+cd LLD-Practice-Platform
+
+# Install backend packages
 cd backend
 npm install
 
-# Frontend
+# Install frontend packages
 cd ../frontend
 npm install
 ```
 
-### 2. Configure Environment
+### 2. Configure environment variables
+
+In the `backend` folder, copy the example file to `.env`:
 
 ```bash
-cd backend
+cd ../backend
 cp .env.example .env
 ```
 
-Edit `.env` with your values:
+Open `.env` and fill in your values:
 
-```
-PORT=3001
-NODE_ENV=development
-MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/lld-practice
-JWT_SECRET=your-secret-key-here
-JWT_EXPIRES_IN=24h
-GEMINI_API_KEY=your-gemini-api-key
-FRONTEND_URL=http://localhost:5173
-```
+- `MONGODB_URI` — your MongoDB connection string (e.g., `mongodb://localhost:27017/lld-practice` or an Atlas URI)
+- `GEMINI_API_KEY` — your Google Gemini API key
+- `JWT_SECRET` — any long random string for signing user session tokens
+- `PORT` — backend port, defaults to `3001` if omitted
+- `JWT_EXPIRES_IN` — session duration, e.g. `24h`
+- `FRONTEND_URL` — allowed CORS origin, typically `http://localhost:5173`
 
-### 3. Seed Problems
+### 3. Seed initial problems
+
+Before starting the server, seed the database with the default set of classic LLD problems (Parking Lot, Elevator System, Vending Machine, Rate Limiter, Library Management):
 
 ```bash
 cd backend
 npx ts-node src/scripts/seed.ts
 ```
 
-### 4. Run
+### 4. Start the development servers
+
+Run both the backend and frontend in separate terminals:
 
 ```bash
-# Terminal 1 — Backend
+# Terminal 1: Backend (runs on http://localhost:3001)
 cd backend
 npm run dev
 
-# Terminal 2 — Frontend
+# Terminal 2: Frontend (runs on http://localhost:5173)
 cd frontend
 npm run dev
 ```
 
-Open http://localhost:5173 → Register → Start practicing.
+Head to `http://localhost:5173`, create an account on the register page, and you can jump straight into solving problems.
 
-### 5. Run Tests
+## Project Structure
+
+The backend follows clean architecture principles, separating core business rules from database and framework concerns:
+
+- `backend/src/domain/` holds the core domain models (`Problem`, `Submission`, `Attempt`, `Feedback`), evaluation interfaces, rubric configuration, and a state machine for submissions. Nothing in here imports Mongoose or Express.
+- `backend/src/infrastructure/` contains Mongoose schemas and repository implementations that fulfill the domain interfaces.
+- `backend/src/services/` orchestrates operations — auth, submissions, problem fetching, and the evaluation lifecycle.
+- `backend/src/routes/` and `middleware/` handle HTTP requests, JWT verification, rate limiting, and input sanitization.
+
+On the frontend (`frontend/src/`):
+
+- `pages/` houses the primary views (problem browser, problem detail, writing an attempt, viewing feedback, my attempts history, and progress analytics).
+- `components/` contains reusable UI pieces including the navigation bar, cards, and problem difficulty badges.
+- `contexts/` manages user authentication state across the application.
+
+## Key Design Decisions
+
+A few architectural choices are worth highlighting:
+
+- **Gate + Judge evaluation pipeline**: To avoid wasting API quota on empty, gibberish, or malformed inputs, a fast deterministic `RuleBasedEvaluator` runs first as a gatekeeper. If the submission passes basic keyword and length checks, it proceeds to the `LLMEvaluator` judge.
+- **Two-layer injection defense**: Untrusted learner text is wrapped inside strict boundary tags in the prompt, and LLM responses are validated at runtime against a Zod schema before anything is written to the database. If the model returns out-of-bounds numbers or missing criteria, the submission fails safely instead of poisoning the DB.
+- **Explicit submission state machine**: Submissions transition through strict states (`Submitted -> Evaluating -> Completed | Failed`), preventing invalid jumps (e.g., straight from Submitted to Completed without evaluation) and cleanly tracking retry attempts.
+- **Repository pattern with domain decoupling**: Business logic talks to repository interfaces rather than Mongoose models directly. This is why the entire test suite runs in under 4 seconds without spinning up a database.
+
+For a deeper dive into these trade-offs, check out [DESIGN.md](file:///d:/CipherSchools/lld-practice-platform/DESIGN.md).
+
+## Known Limitations
+
+This prototype focuses on the core feedback loop, so a few production concerns are intentionally simplified:
+
+- Submissions are currently text-only. Diagram rendering and AST-based code analysis are left for future iterations.
+- Background evaluations run asynchronously in-process via `setImmediate` rather than using a persistent queue like BullMQ or RabbitMQ. A server restart during evaluation leaves the job in a failed state (though it can be manually retried).
+- For local dev convenience, MongoDB Atlas network access is typically set wide (0.0.0.0/0). A production setup should lock this down to dedicated IPs or VPC peering.
+
+## Running Tests
+
+The backend includes a comprehensive unit test suite covering the state machine, rule evaluator, submission service, and evaluation error paths:
 
 ```bash
 cd backend
 npm test
 ```
 
-## Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `MONGODB_URI` | Yes | MongoDB connection string |
-| `JWT_SECRET` | Yes | Secret key for JWT signing |
-| `GEMINI_API_KEY` | Yes | Google Gemini API key |
-| `PORT` | No | Backend port (default: 3001) |
-| `JWT_EXPIRES_IN` | No | JWT expiry (default: 24h) |
-| `FRONTEND_URL` | No | CORS origin (default: http://localhost:5173) |
-
-## Key Design Decisions
-
-1. **Strategy pattern** for evaluation — `Evaluator` interface with `LLMEvaluator` and `RuleBasedEvaluator` implementations. New evaluators (human review, etc.) can be added without touching the submission flow.
-
-2. **Explicit state machine** for submissions — `Submitted → Evaluating → Completed|Failed`. No ad-hoc status string mutation. Invalid transitions throw with clear error messages.
-
-3. **Persist-first** — submissions are saved to DB immediately before evaluation starts. Even if the evaluator crashes, the learner's work is preserved.
-
-4. **Two-layer prompt injection defense** — (1) untrusted data delimiters in the prompt, (2) Zod schema validation of LLM output. The model is asked to behave correctly AND its output is enforced to be correct.
-
-5. **Gate + Judge evaluation** — RuleBasedEvaluator (free, fast, deterministic) gates garbage submissions. LLMEvaluator only runs on valid input.
-
-6. **Repository pattern** — business logic depends on interfaces, not Mongoose directly. All 32 tests run without a database connection.
-
-7. **Text-only submission** — justified as sufficient for demonstrating design thinking. Polymorphic `SubmissionContent` (discriminated union) supports future formats with minimal changes.
-
-## Security Measures
-
-- **IDOR**: Every query filters by `learnerId` from JWT — no cross-user data access.
-- **XSS**: Backend sanitization (xss library) + Frontend sanitization (DOMPurify).
-- **Rate limiting**: 5 submissions/min, 100 requests/min general, 10 auth attempts/min.
-- **Idempotency**: Client-generated UUID prevents duplicate submissions on double-click.
-- **CORS**: Restricted to configured frontend origin.
-- **Secrets**: All API keys via env vars, never committed or returned in responses.
-
-## Known Limitations
-
-- **No production job queue**: Async evaluation uses `setImmediate` — lost if server crashes mid-evaluation (retryable).
-- **No email verification**: Registration accepts any email format.
-- **No pagination**: History page loads all attempts at once.
-- **Single LLM provider**: Only Gemini supported (extensible via LangChain).
-- **localStorage JWT**: XSS risk mitigated by sanitization; httpOnly cookies would be preferred in production.
-
-## Project Structure
-
-```
-backend/
-├── src/
-│   ├── domain/          # Pure domain model (no DB deps)
-│   │   ├── entities/    # Problem, Learner, Attempt, Submission, Feedback, EvaluationResult
-│   │   ├── interfaces/  # Evaluator, GateEvaluator, Repository interfaces
-│   │   ├── evaluators/  # LLMEvaluator, RuleBasedEvaluator
-│   │   ├── rubric/      # Rubric config object
-│   │   └── state-machine/
-│   ├── infrastructure/  # Mongoose models + Repository implementations
-│   ├── services/        # AuthService, ProblemService, AttemptService, SubmissionService, EvaluationService
-│   ├── middleware/       # Auth, rate limiting, XSS sanitization, error handler
-│   ├── routes/          # Express route handlers
-│   └── scripts/         # Seed script
-├── tests/
-│   └── unit/            # 32 tests: state machine, evaluators, services
-
-frontend/
-├── src/
-│   ├── api/             # Axios client with JWT interceptors
-│   ├── contexts/        # AuthContext
-│   ├── pages/           # Login, Register, Problems, ProblemDetail, Attempt, Feedback
-│   ├── components/      # Navbar, ProtectedRoute
-│   ├── hooks/           # usePolling
-│   └── utils/           # DOMPurify sanitization
-```
+All 32 tests run in-memory and do not require a live database or active API keys.
