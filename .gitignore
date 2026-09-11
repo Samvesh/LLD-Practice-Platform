@@ -24,3 +24,7 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
+
+# Submission files (local only)
+submission-files/
+
