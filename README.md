@@ -51,7 +51,7 @@ Before starting the server, seed the database with the default set of classic LL
 
 ```bash
 cd backend
-npx ts-node src/scripts/seed.ts
+npm run seed
 ```
 
 ### 4. Start the development servers
@@ -94,7 +94,7 @@ A few architectural choices are worth highlighting:
 - **Explicit submission state machine**: Submissions transition through strict states (`Submitted -> Evaluating -> Completed | Failed`), preventing invalid jumps (e.g., straight from Submitted to Completed without evaluation) and cleanly tracking retry attempts.
 - **Repository pattern with domain decoupling**: Business logic talks to repository interfaces rather than Mongoose models directly. This is why the entire test suite runs in under 4 seconds without spinning up a database.
 
-For a deeper dive into these trade-offs, check out [DESIGN.md](file:///d:/CipherSchools/lld-practice-platform/DESIGN.md).
+For a deeper dive into these trade-offs, check out [DESIGN.md](./DESIGN.md).
 
 ## Known Limitations
 
